@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../config.dart';
+import '../providers/auth_provider.dart';
+import '../routes.dart';
 import '../utils/validators.dart';
 import '../widgets/demo_mode_banner.dart';
 
 /// First screen: college email + password.
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, required this.demoMode});
-
-  final bool demoMode;
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -27,20 +28,25 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Login is wired up in Phase 1.')),
-    );
+    final error = await context
+        .read<AuthProvider>()
+        .signIn(_emailController.text, _passwordController.text);
+    // On success AuthGate swaps this screen for Home by itself.
+    if (error != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            if (widget.demoMode) const DemoModeBanner(),
+            if (auth.isDemoMode) const DemoModeBanner(),
             Expanded(
               child: Center(
                 child: SingleChildScrollView(
@@ -89,7 +95,21 @@ class _LoginScreenState extends State<LoginScreen> {
                           onFieldSubmitted: (_) => _submit(),
                         ),
                         const SizedBox(height: 24),
-                        FilledButton(onPressed: _submit, child: const Text('Log in')),
+                        FilledButton(
+                          onPressed: auth.isBusy ? null : _submit,
+                          child: auth.isBusy
+                              ? const SizedBox.square(
+                                  dimension: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2))
+                              : const Text('Log in'),
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: auth.isBusy
+                              ? null
+                              : () => Navigator.pushNamed(context, AppRoutes.signup),
+                          child: const Text('New here? Create an account'),
+                        ),
                       ],
                     ),
                   ),
