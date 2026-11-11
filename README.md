@@ -1,39 +1,121 @@
 # Campusmate – Campus Lost & Found
 
-A Flutter app for the MAD lab mini project. Students post **lost** or
-**found** items with a photo, category, description and location. The app
-suggests possible matches between lost and found posts. Only college email
-addresses can log in.
+**Lost it? Found it? Campusmate it.** A Flutter app where students post lost
+or found items with a photo. The app matches lost posts with found posts
+automatically, so things get back to their owners faster. Only college
+email addresses can join.
 
-**Stack:** Flutter (Material 3) · Firebase Auth (email/password) · Cloud
-Firestore · Provider. No Firebase Storage or Cloud Functions (both need
-the paid plan). Photos are compressed to under 300 KB and stored as base64
-text inside the Firestore document.
+MAD (Mobile Application Development) lab mini project.
 
----
+## Team
 
-## 1. Run it right now (demo mode, no Firebase needed)
+| Name |
+|------|
+| Jaipreet |
+| H Dhruva |
+| Manik |
+| Naveen Kumat |
+
+## Screenshots
+
+All taken at phone size (390 × 844) in mock mode. Every screen is in [`docs/screenshots/`](docs/screenshots/).
+
+| Login | Home feed | Category filter | Item detail |
+|---|---|---|---|
+| ![Login](docs/screenshots/01_login.png) | ![Home](docs/screenshots/06_home_lost.png) | ![Filter](docs/screenshots/08_category_filter.png) | ![Detail](docs/screenshots/09_detail.png) |
+
+| Possible matches | Post: photo step | Post: validation | Posted with photo |
+|---|---|---|---|
+| ![Matches](docs/screenshots/10_detail_matches.png) | ![Photo step](docs/screenshots/12_post_photo_added.png) | ![Validation](docs/screenshots/13_post_validation.png) | ![Posted](docs/screenshots/16_posted_detail.png) |
+
+| Loading skeleton | Demo menu | Match alert | Dark mode |
+|---|---|---|---|
+| ![Skeleton](docs/screenshots/03_loading_skeleton.png) | ![Demo menu](docs/screenshots/05_demo_menu.png) | ![Match banner](docs/screenshots/18_match_banner.png) | ![Dark](docs/screenshots/21_home_dark.png) |
+
+## Features
+
+### Done (Review 1)
+
+- Sign up / log in / log out, limited to the college email domain (`lib/config.dart`)
+- Home: greeting, keyword search, category chips with icons, Lost / Found switch with counts,
+  image-led cards, pull-to-refresh, shimmer skeleton while loading, friendly empty and error states
+- Post an item in 3 steps (Photo → Details → Location): camera or gallery photo, compressed under
+  300 KB and stored as base64 text, validation on every step, campus place picker
+- Item detail: large Hero-animated image, LOST / FOUND / RETURNED badge, info rows with icons,
+  description, sticky action button
+- **Automatic matching:** lost ↔ found, same category, shared keywords, best match first,
+  with the matched words shown
+- Bottom navigation bar with a centred **+** button; Profile screen with a dark-mode switch
+- Material 3 theme from one teal seed colour, Poppins font (bundled, works offline),
+  16 px rounded cards, 8 px spacing grid, smooth page transitions
+- **Mock mode** (no Firebase, no internet) with a hidden demo menu: long-press the logo →
+  load 12 sample posts, reset data, toggle theme, simulate a match alert
+- 21 automated tests, including one that walks through every screen on a 320 × 568 phone
+  to catch layout overflow
+
+### Coming next
+
+- **Phase 2 (by 20 Nov):** claim flow with proof question, chat after approval, phone notifications,
+  My Posts (edit / delete / mark returned), more validation and offline handling
+- **Phase 3 (by 27 Nov):** app icon and splash, Firestore security rules, release APK,
+  viva notes and presentation outline
+
+## Tech stack
+
+| Part | Used |
+|------|------|
+| UI | Flutter 3.47 (stable), Dart 3.13, Material 3, google_fonts (Poppins, bundled) |
+| State | Provider (`ChangeNotifier`) |
+| Login | Firebase Authentication (email + password) |
+| Database | Cloud Firestore (realtime listener) |
+| Photos | image_picker + image (compression), stored as base64 in Firestore |
+| Not used | Firebase Storage and Cloud Functions (both need the paid plan) |
+
+## Run it in mock mode (no setup)
 
 ```bash
 flutter pub get
-flutter run              # on an Android phone/emulator
-flutter run -d chrome    # or quickly in Chrome
+flutter run -d chrome    # in Chrome, then use DevTools device mode for phone size
+flutter run              # on an Android phone (see below)
 ```
 
-Until Firebase is configured the app shows a yellow **DEMO MODE** banner.
-Accounts and posts are then kept in memory only and disappear when the app
-closes. That is expected.
+`lib/config.dart` has `USE_MOCK_DATA = true` by default. A yellow **DEMO MODE** strip shows that
+accounts and posts live in memory only and disappear when the app closes.
 
-## 2. Connect Firebase (one-time, team lead)
+**Demo tip:** after signing up, **long-press the teal logo** on Home to open the demo menu and
+load the 12 sample posts. The 4-minute review flow is in [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md).
 
-1. Go to <https://console.firebase.google.com> and click **Create a project**.
-   Name it `campusmate`. Google Analytics is not needed.
-2. **Build → Authentication → Get started → Sign-in method → Email/Password →
-   Enable → Save.**
-3. **Build → Firestore Database → Create database.** Pick location
-   `asia-south1 (Mumbai)` and start in **production mode**. Then open the
-   **Rules** tab, paste the rules below and click **Publish**. They allow
-   only logged-in users. Phase 3 replaces them with stricter rules.
+## Run on an Android phone (USB)
+
+Needs JDK 17 and the Android SDK command-line tools + platform-tools on the laptop
+(not set up yet on the dev laptop, see `docs/DECISIONS.md` D30).
+
+On the phone:
+
+1. **Settings → About phone** → tap **Build number** 7 times until it says "You are now a developer".
+   (Some phones: Settings → About phone → Software information → Build number.)
+2. **Settings → System → Developer options** → turn on **USB debugging**.
+3. Connect the phone to the laptop with a data USB cable. Choose **File transfer** if asked.
+4. On the phone, tap **Allow** on "Allow USB debugging?" (tick "Always allow from this computer").
+
+On the laptop:
+
+```bash
+adb devices          # the phone should be listed as "device" (not "unauthorized")
+flutter devices      # the phone should appear here too
+flutter run          # builds and installs the app on the phone
+```
+
+If `adb devices` shows nothing, try another cable or USB port, and install your phone maker's USB
+driver (Windows only).
+
+## Connect Firebase (one-time, team lead)
+
+1. <https://console.firebase.google.com> → **Create a project** → name `campusmate` (Analytics not needed).
+2. **Build → Authentication → Get started → Sign-in method → Email/Password → Enable → Save.**
+3. **Build → Firestore Database → Create database** → location `asia-south1 (Mumbai)` →
+   **production mode**. Open **Rules**, paste the rules below and click **Publish**.
+   They allow only logged-in users. Phase 3 adds stricter rules.
 
    ```
    rules_version = '2';
@@ -46,7 +128,7 @@ closes. That is expected.
    }
    ```
 
-4. Install the command-line tools once (Node.js is required):
+4. Install the tools once (Node.js needed):
 
    ```bash
    npm install -g firebase-tools
@@ -54,57 +136,43 @@ closes. That is expected.
    firebase login
    ```
 
-5. Inside this project folder run:
+5. In this folder: `flutterfire configure --project=<your-project-id> --platforms=android`.
+   This creates `android/app/google-services.json` (git-ignored: **never commit it**).
+6. Set `USE_MOCK_DATA = false` in `lib/config.dart` and run on Android.
 
-   ```bash
-   flutterfire configure --project=<your-firebase-project-id> --platforms=android
-   ```
+Teammates: get `google-services.json` from the team lead privately and put it in `android/app/`.
 
-   This creates `android/app/google-services.json` (plus
-   `lib/firebase_options.dart` and `firebase.json`) and adds the Google
-   Services Gradle plugin. The three generated files are **git-ignored**.
-   Never commit them.
-6. Run the app on Android. The DEMO MODE banner should be gone.
+**College domain:** set `ALLOWED_EMAIL_DOMAIN` in `lib/config.dart`, for example `'dsce.edu.in'`.
+Empty means any email is allowed (handy for testing).
 
-**Other teammates:** clone the repo and get `google-services.json` from the
-team lead privately (WhatsApp/Drive). Put it at
-`android/app/google-services.json`. You can also run step 5 yourself if you
-were added to the Firebase project.
-
-## 3. Restrict login to the college domain
-
-Edit `lib/config.dart`:
-
-```dart
-const String ALLOWED_EMAIL_DOMAIN = 'yourcollege.edu.in';
-```
-
-Empty (`''`) means any email is allowed. That is the default, for testing.
-
-## 4. Checks
+## Checks
 
 ```bash
-flutter analyze
-flutter test
+flutter analyze   # no issues
+flutter test      # 21 tests
 ```
 
-## 5. Folder structure
+## Project structure
 
 ```
 lib/
-  main.dart            entry point: start Firebase or demo mode
-  app.dart             MaterialApp: theme, routes, providers
-  config.dart          values the team may change (email domain, categories)
-  theme.dart           Material 3 light/dark theme
+  main.dart            entry point: picks mock or Firebase services
+  app.dart             MaterialApp, theme, routes, providers
+  config.dart          USE_MOCK_DATA, email domain, categories, campus places
+  theme.dart           Material 3 theme, spacing scale, badge colours
   routes.dart          named routes
-  models/              plain data classes (Item, AppUser)
-  services/            talks to Firebase (or the in-memory mock)
-  providers/           app state (Provider / ChangeNotifier)
-  screens/             one file per screen
-  widgets/             small reusable widgets
-  utils/               validators, date formatting
+  models/              Item, AppUser
+  services/            Firebase + mock versions of auth and items, matching, images, sample data
+  providers/           AuthProvider, ItemProvider, ThemeProvider
+  screens/             login, signup, main shell (bottom bar), home, profile, add item, detail
+  widgets/             ItemCard, CategoryChip, StatusBadge, EmptyState, PrimaryButton, ShimmerList, …
 test/                  unit + widget tests
-docs/                  DECISIONS.md, later VIVA_NOTES.md and DEMO_SCRIPT.md
+docs/                  DECISIONS.md, DEMO_SCRIPT.md, screenshots/
 ```
 
-See `docs/DECISIONS.md` for why things are done the way they are.
+Why things are built the way they are: [`docs/DECISIONS.md`](docs/DECISIONS.md).
+
+## License
+
+Apache 2.0, see [LICENSE](LICENSE). The Poppins font is under the SIL Open Font License
+(`assets/google_fonts/OFL.txt`).

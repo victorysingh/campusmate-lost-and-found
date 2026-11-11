@@ -33,3 +33,21 @@ Newest phase at the bottom.
 | D19 | **Known gap:** the college-domain check is only in the app (form + AuthProvider). There is no email verification, so someone could sign up with a college-looking address they do not own. Phase 3 rules will also check `request.auth.token.email` on the server. Email verification is not in the brief, so it was not added. | No scope creep. Noted so the team can answer it in the viva. |
 | D20 | **Known gap:** posting waits for Firestore to confirm the write. Offline, the Post button keeps spinning until the network is back. | Phase 2 covers "offline-safe errors". |
 | D21 | The detail route is given the whole `Item` but shows the live copy from ItemProvider when there is one. | Shows at once right after saving, and still updates in realtime. |
+
+## Phase 1 UI polish (11 Nov 2026)
+
+| # | Decision | Why |
+|---|----------|-----|
+| D22 | **`USE_MOCK_DATA` in `config.dart`** now picks mock or Firebase. It replaces the automatic detection from D2. With `false`, the app still falls back to mock mode (with the banner) if Firebase is not configured. | The brief asks for one flag. The fallback means a missing config file can never crash the demo. |
+| D23 | Poppins TTF files are **bundled** in `assets/google_fonts/` and `GoogleFonts.config.allowRuntimeFetching = false`. The greeting has no emoji. | The demo must work offline. google_fonts would otherwise download the font, and an emoji on web needs a font download too. |
+| D24 | The dark-mode switch is not saved; the app starts in light mode. | Saving it needs `shared_preferences`, an extra package the brief does not ask for. |
+| D25 | `google_fonts` is pinned to **^8.0.0**. | Version 9.0 is built on the new `package:material_ui`. Its `TextTheme` is a different class from Flutter's, so the theme does not compile. |
+| D26 | The shimmer skeleton is hand-written (`widgets/shimmer_list.dart`, about 60 lines), not the `shimmer` package. | One small widget, no extra dependency, and easy to explain (AnimationController + ShaderMask). |
+| D27 | In mock mode the 12 sample posts belong to made-up students (Priya Sharma, Rahul Kumar…). With Firebase they belong to the logged-in user. This replaces D18. | It looks real, and the "This is mine / I found this" button shows on someone else's post. Firestore rules (Phase 3) will only allow posting as yourself. |
+| D28 | Mock mode waits 700 ms before the first list loads. | Otherwise the skeleton is never visible in a demo. Tests pass `Duration.zero`. |
+| D29 | Demo menu: "Simulate match notification" shows an in-app MaterialBanner for now. "Reset data" works in mock mode only. | Phone notifications (flutter_local_notifications) are Phase 2. We never wipe the real database from a hidden menu. |
+| D30 | **Android SDK not installed.** On 11 Nov, C: had 6.5 GB free, below the 8 GB limit set by the team lead, so JDK 17 + Android tools were not installed. Screenshots were taken in Chrome at 390 × 844, not on an emulator or phone. | Rule from the team lead. Free some disk space, then the install can go ahead. |
+| D31 | Post form: Material `Stepper` (horizontal). Step names sit **under** the circles (`Step.label`). | With names beside the circles the header overflowed by 14 px on a 320 px-wide phone (caught by the small-phone test). |
+| D32 | Location step = campus place dropdown (`campusLocations` in config) + optional detail text, saved as one string, e.g. "Library · 2nd floor". No map. | Simple, works offline, no API key. A map pin stays optional for Phase 2. |
+| D33 | Bottom bar has Home + Profile around the centred **+** button. My Posts / Alerts tabs arrive in Phase 2. | No empty placeholder tabs in Review 1. |
+| D34 | The detail screen's sticky button: on your own post it scrolls to the matches. On someone else's post it says "I found this" / "This is mine" and, for now, shows "Claiming arrives in the next update." | Phase 2 replaces the placeholder with the claim flow. |
