@@ -9,6 +9,14 @@ class AppLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    return Semantics(
+      label: 'Campusmate logo', // read out by screen readers
+      image: true,
+      child: _box(colors),
+    );
+  }
+
+  Widget _box(ColorScheme colors) {
     return Container(
       width: size,
       height: size,
