@@ -4,8 +4,11 @@ import 'package:provider/provider.dart';
 import '../config.dart';
 import '../providers/auth_provider.dart';
 import '../routes.dart';
+import '../theme.dart';
 import '../utils/validators.dart';
+import '../widgets/app_logo.dart';
 import '../widgets/demo_mode_banner.dart';
+import '../widgets/primary_button.dart';
 
 /// First screen: college email + password.
 class LoginScreen extends StatefulWidget {
@@ -56,14 +59,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Icon(Icons.travel_explore,
-                            size: 72, color: Theme.of(context).colorScheme.primary),
-                        const SizedBox(height: 8),
+                        const Center(child: AppLogo(size: 88)),
+                        const SizedBox(height: Space.m),
                         Text(appName,
                             textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.headlineMedium),
-                        const Text('Campus Lost & Found', textAlign: TextAlign.center),
-                        const SizedBox(height: 32),
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineMedium
+                                ?.copyWith(fontWeight: FontWeight.w700)),
+                        Text('Lost it? Found it? Campusmate it.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                        const SizedBox(height: Space.xl),
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
@@ -95,13 +103,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           onFieldSubmitted: (_) => _submit(),
                         ),
                         const SizedBox(height: 24),
-                        FilledButton(
-                          onPressed: auth.isBusy ? null : _submit,
-                          child: auth.isBusy
-                              ? const SizedBox.square(
-                                  dimension: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2))
-                              : const Text('Log in'),
+                        PrimaryButton(
+                          label: 'Log in',
+                          loading: auth.isBusy,
+                          onPressed: _submit,
                         ),
                         const SizedBox(height: 8),
                         TextButton(

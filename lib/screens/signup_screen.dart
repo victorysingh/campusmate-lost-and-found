@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../config.dart';
 import '../providers/auth_provider.dart';
 import '../utils/validators.dart';
+import '../widgets/primary_button.dart';
 
 /// Create an account with name, college email and password.
 class SignupScreen extends StatefulWidget {
@@ -93,13 +94,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       v == _passwordController.text ? null : 'Passwords do not match',
                 ),
                 const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: busy ? null : _submit,
-                  child: busy
-                      ? const SizedBox.square(
-                          dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Text('Sign up'),
-                ),
+                PrimaryButton(label: 'Sign up', loading: busy, onPressed: _submit),
               ],
             ),
           ),

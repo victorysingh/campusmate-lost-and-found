@@ -6,159 +6,238 @@ import '../models/item.dart';
 import '../providers/auth_provider.dart';
 import '../providers/item_provider.dart';
 import '../routes.dart';
+import '../theme.dart';
+import '../widgets/app_logo.dart';
+import '../widgets/category_chip.dart';
+import '../widgets/debug_menu.dart';
 import '../widgets/demo_mode_banner.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/item_card.dart';
+import '../widgets/shimmer_list.dart';
 
-/// Main screen: search bar, category filter and two tabs (Lost / Found).
-class HomeScreen extends StatelessWidget {
+/// Home tab: greeting, search, category chips, Lost/Found switch and the feed.
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
-  Future<void> _addSamples(BuildContext context) async {
-    final user = context.read<AuthProvider>().user!;
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      await context.read<ItemProvider>().addSampleItems(user);
-      messenger.showSnackBar(const SnackBar(content: Text('Added 10 sample items')));
-    } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Could not add samples: $e')));
-    }
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final _searchController = TextEditingController();
+  ItemType _type = ItemType.lost; // which list is showing
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDemo = context.watch<AuthProvider>().isDemoMode;
+    final auth = context.watch<AuthProvider>();
+    final provider = context.watch<ItemProvider>();
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text(appName),
-          actions: [
-            PopupMenuButton<String>(
-              onSelected: (choice) {
-                if (choice == 'samples') _addSamples(context);
-                if (choice == 'logout') context.read<AuthProvider>().signOut();
-              },
-              itemBuilder: (context) => const [
-                PopupMenuItem(value: 'samples', child: Text('Add 10 sample items')),
-                PopupMenuItem(value: 'logout', child: Text('Log out')),
-              ],
-            ),
+    return SafeArea(
+      bottom: false,
+      child: RefreshIndicator(
+        onRefresh: provider.refresh,
+        // CustomScrollView = one scrolling page made of "slivers", so the
+        // header scrolls away together with the list.
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(), // pull works even when empty
+          slivers: [
+            if (auth.isDemoMode) const SliverToBoxAdapter(child: DemoModeBanner()),
+            SliverToBoxAdapter(child: _header(context, auth.user?.name ?? '')),
+            SliverToBoxAdapter(child: _searchBar(provider)),
+            SliverToBoxAdapter(child: _categoryChips(provider)),
+            SliverToBoxAdapter(child: _typeSwitch(provider)),
+            ..._content(context, provider),
           ],
-          bottom: const TabBar(
-            tabs: [
-              Tab(icon: Icon(Icons.search_off), text: 'Lost'),
-              Tab(icon: Icon(Icons.inventory), text: 'Found'),
-            ],
-          ),
-        ),
-        body: Column(
-          children: [
-            if (isDemo) const DemoModeBanner(),
-            const _SearchAndFilterBar(),
-            const Expanded(
-              child: TabBarView(
-                children: [
-                  _ItemList(type: ItemType.lost),
-                  _ItemList(type: ItemType.found),
-                ],
-              ),
-            ),
-          ],
-        ),
-        // Builder gives a context *inside* DefaultTabController, so we can
-        // read which tab is open and pre-select Lost or Found on the form.
-        floatingActionButton: Builder(
-          builder: (context) => FloatingActionButton.extended(
-            icon: const Icon(Icons.add),
-            label: const Text('Post item'),
-            onPressed: () {
-              final tab = DefaultTabController.of(context).index;
-              Navigator.pushNamed(context, AppRoutes.addItem,
-                  arguments: tab == 0 ? ItemType.lost : ItemType.found);
-            },
-          ),
         ),
       ),
     );
   }
-}
 
-/// Keyword search box + category dropdown. Filters both tabs.
-class _SearchAndFilterBar extends StatelessWidget {
-  const _SearchAndFilterBar();
+  Widget _header(BuildContext context, String name) {
+    final text = Theme.of(context).textTheme;
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12
+        ? 'Good morning'
+        : hour < 17
+            ? 'Good afternoon'
+            : 'Good evening';
+    final firstName = name.split(' ').first;
 
-  @override
-  Widget build(BuildContext context) {
-    final items = context.watch<ItemProvider>();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+      padding: const EdgeInsets.fromLTRB(Space.m, Space.m, Space.m, Space.s),
       child: Row(
         children: [
           Expanded(
-            child: TextField(
-              decoration: const InputDecoration(
-                hintText: 'Search title, description, place',
-                prefixIcon: Icon(Icons.search),
-                isDense: true,
-              ),
-              onChanged: items.setQuery,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // (No emoji: on web it needs a font download, and the demo is offline.)
+                Text('$greeting, $firstName',
+                    style: text.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
+                Text('Lost something? Let’s find it together.',
+                    style: text.bodyMedium
+                        ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              ],
             ),
           ),
-          const SizedBox(width: 8),
-          DropdownButton<String?>(
-            value: items.category,
-            onChanged: items.setCategory,
-            items: [
-              const DropdownMenuItem(value: null, child: Text('All')),
-              for (final c in itemCategories) DropdownMenuItem(value: c, child: Text(c)),
-            ],
+          // Long-press the logo to open the hidden demo menu.
+          GestureDetector(
+            onLongPress: () => showDebugMenu(context),
+            child: const AppLogo(size: 48),
           ),
         ],
       ),
     );
   }
-}
 
-/// The list inside one tab, with loading / error / empty states.
-class _ItemList extends StatelessWidget {
-  const _ItemList({required this.type});
+  Widget _searchBar(ItemProvider provider) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: Space.m, vertical: Space.s),
+      child: TextField(
+        controller: _searchController,
+        textInputAction: TextInputAction.search,
+        decoration: InputDecoration(
+          hintText: 'Search AirPods, ID card, library…',
+          prefixIcon: const Icon(Icons.search_rounded),
+          suffixIcon: provider.query.isEmpty
+              ? null
+              : IconButton(
+                  tooltip: 'Clear search',
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: () {
+                    _searchController.clear();
+                    provider.setQuery('');
+                  },
+                ),
+        ),
+        onChanged: provider.setQuery,
+      ),
+    );
+  }
 
-  final ItemType type;
+  Widget _categoryChips(ItemProvider provider) {
+    return SizedBox(
+      height: 56,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: Space.m, vertical: Space.s),
+        children: [
+          CategoryChip(
+            label: 'All',
+            icon: Icons.apps_rounded,
+            selected: provider.category == null,
+            onTap: () => provider.setCategory(null),
+          ),
+          for (final c in itemCategories)
+            Padding(
+              padding: const EdgeInsets.only(left: Space.s),
+              child: CategoryChip(
+                label: c,
+                icon: iconForCategory(c),
+                selected: provider.category == c,
+                // Tapping the selected chip again clears the filter.
+                onTap: () => provider.setCategory(provider.category == c ? null : c),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<ItemProvider>();
+  Widget _typeSwitch(ItemProvider provider) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(Space.m, Space.s, Space.m, Space.m),
+      child: SizedBox(
+        width: double.infinity,
+        child: SegmentedButton<ItemType>(
+          segments: [
+            ButtonSegment(
+              value: ItemType.lost,
+              icon: const Icon(Icons.search_rounded),
+              label: Text('Lost (${provider.countOfType(ItemType.lost)})'),
+            ),
+            ButtonSegment(
+              value: ItemType.found,
+              icon: const Icon(Icons.volunteer_activism_rounded),
+              label: Text('Found (${provider.countOfType(ItemType.found)})'),
+            ),
+          ],
+          selected: {_type},
+          onSelectionChanged: (s) => setState(() => _type = s.first),
+        ),
+      ),
+    );
+  }
 
+  /// The part under the filters: skeleton, error, empty message or list.
+  List<Widget> _content(BuildContext context, ItemProvider provider) {
     if (provider.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const [
+        SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: Space.m),
+          sliver: SliverToBoxAdapter(child: ShimmerList()),
+        ),
+      ];
     }
     if (provider.error != null) {
-      return EmptyState(icon: Icons.cloud_off, message: provider.error!);
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: EmptyState(
+            icon: Icons.cloud_off_rounded,
+            title: 'Couldn’t load posts',
+            message: provider.error!,
+            actionLabel: 'Try again',
+            onAction: provider.refresh,
+          ),
+        ),
+      ];
     }
 
-    final items = provider.itemsOfType(type);
+    final items = provider.itemsOfType(_type);
     if (items.isEmpty) {
-      final word = type == ItemType.lost ? 'lost' : 'found';
-      return EmptyState(
-        icon: Icons.inbox_outlined,
-        message: provider.hasFilters
-            ? 'No $word items match your search.'
-            : 'No $word items yet.\nTap "Post item" to add one.',
-      );
+      final word = _type == ItemType.lost ? 'lost' : 'found';
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: provider.hasFilters
+              ? const EmptyState(
+                  icon: Icons.search_off_rounded,
+                  title: 'No results',
+                  message: 'Try another word or pick a different category.',
+                )
+              : EmptyState(
+                  icon: Icons.inventory_2_outlined,
+                  title: 'No $word items yet',
+                  message: 'When someone posts a $word item it shows up here.\n'
+                      'Tap the + button to post one.',
+                ),
+        ),
+      ];
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 88), // room for the FAB
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final item = items[index];
-        return ItemCard(
-          item: item,
-          onTap: () => Navigator.pushNamed(context, AppRoutes.itemDetail, arguments: item),
-        );
-      },
-    );
+    return [
+      SliverPadding(
+        // Extra bottom space so the last card is not hidden by the Post button.
+        padding: const EdgeInsets.fromLTRB(Space.m, 0, Space.m, 96),
+        sliver: SliverList.separated(
+          itemCount: items.length,
+          separatorBuilder: (context, index) => const SizedBox(height: Space.m),
+          itemBuilder: (context, index) => ItemCard(
+            item: items[index],
+            onTap: () =>
+                Navigator.pushNamed(context, AppRoutes.itemDetail, arguments: items[index]),
+          ),
+        ),
+      ),
+    ];
   }
 }

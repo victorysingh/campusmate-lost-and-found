@@ -1,64 +1,50 @@
 import 'package:flutter/material.dart';
 
 import '../models/item.dart';
+import 'category_chip.dart';
 
-/// Shows an item's photo, or a category icon if it has no photo.
-/// [size] is the width and height of the box.
+/// An item's photo filling its box, or (no photo) a soft gradient with
+/// the category icon, so cards always look "image-led".
 class ItemImage extends StatelessWidget {
-  const ItemImage({super.key, required this.item, required this.size});
+  const ItemImage({super.key, required this.item, this.iconSize = 48});
 
   final Item item;
-  final double size;
+  final double iconSize;
 
   @override
   Widget build(BuildContext context) {
     final bytes = item.imageBytes;
-    final colors = Theme.of(context).colorScheme;
+    if (bytes != null) {
+      return Image.memory(
+        bytes,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        gaplessPlayback: true, // no flicker when lists rebuild
+        errorBuilder: (context, error, stack) => _placeholder(context),
+      );
+    }
+    return _placeholder(context);
+  }
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: bytes == null
-            ? ColoredBox(
-                color: colors.surfaceContainerHighest,
-                child: Icon(iconForCategory(item.category),
-                    size: size / 2, color: colors.onSurfaceVariant),
-              )
-            : Image.memory(
-                bytes,
-                fit: BoxFit.cover,
-                gaplessPlayback: true, // no flicker when the list rebuilds
-                // Decode a smaller copy for thumbnails to save memory.
-                cacheWidth: (size * MediaQuery.devicePixelRatioOf(context)).round(),
-                errorBuilder: (context, error, stack) =>
-                    const Center(child: Icon(Icons.broken_image)),
-              ),
+  Widget _placeholder(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [colors.primaryContainer, colors.tertiaryContainer],
+        ),
       ),
+      child: Icon(iconForCategory(item.category),
+          size: iconSize, color: colors.onPrimaryContainer.withValues(alpha: 0.7)),
     );
   }
 }
 
-IconData iconForCategory(String category) {
-  switch (category) {
-    case 'Electronics':
-      return Icons.devices;
-    case 'ID Card':
-      return Icons.badge;
-    case 'Wallet':
-      return Icons.account_balance_wallet;
-    case 'Keys':
-      return Icons.key;
-    case 'Books & Notes':
-      return Icons.menu_book;
-    case 'Bags':
-      return Icons.backpack;
-    case 'Clothing':
-      return Icons.checkroom;
-    case 'Water Bottle':
-      return Icons.water_drop;
-    default:
-      return Icons.inventory_2;
-  }
-}
+/// Hero tag shared by the feed card and the detail page image, so the
+/// picture "flies" from the list into the detail screen.
+String heroTagFor(Item item) => 'item-image-${item.id}';

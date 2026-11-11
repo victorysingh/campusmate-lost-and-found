@@ -10,11 +10,13 @@ import '../providers/auth_provider.dart';
 import '../providers/item_provider.dart';
 import '../routes.dart';
 import '../services/image_service.dart';
+import '../theme.dart';
 import '../utils/formatters.dart';
 import '../utils/validators.dart';
+import '../widgets/primary_button.dart';
 
-/// Form to post a Lost or Found item.
-/// Route argument: the ItemType to pre-select (from the open tab).
+/// Post a Lost or Found item in 3 steps: Photo → Details → Location.
+/// Optional route argument: the ItemType to pre-select.
 class AddItemScreen extends StatefulWidget {
   const AddItemScreen({super.key});
 
@@ -23,18 +25,23 @@ class AddItemScreen extends StatefulWidget {
 }
 
 class _AddItemScreenState extends State<AddItemScreen> {
-  final _formKey = GlobalKey<FormState>();
+  // One Form per step, so "Next" only checks the fields on that step.
+  final _detailsFormKey = GlobalKey<FormState>();
+  final _locationFormKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _locationController = TextEditingController();
+  final _placeDetailController = TextEditingController();
   final _imageService = ImageService();
 
+  int _step = 0; // 0 = Photo, 1 = Details, 2 = Location
   ItemType? _type; // set from the route argument on first build
   String? _category;
+  String? _place;
   DateTime _date = DateTime.now();
   String? _imageBase64;
   bool _pickingImage = false;
   bool _saving = false;
+  bool _detailsHasError = false;
 
   @override
   void didChangeDependencies() {
@@ -47,9 +54,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
-    _locationController.dispose();
+    _placeDetailController.dispose();
     super.dispose();
   }
+
+  // ---- actions ----
 
   Future<void> _pickImage(ImageSource source) async {
     setState(() => _pickingImage = true);
@@ -57,8 +66,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
       final base64 = await _imageService.pickImage(source);
       if (base64 != null) setState(() => _imageBase64 = base64);
     } catch (e) {
-      // e.g. camera permission denied, or an unreadable file
-      _showMessage('Could not get photo: $e');
+      _showMessage('Could not get the photo. Please try another one.');
+      debugPrint('Image pick failed: $e');
     } finally {
       if (mounted) setState(() => _pickingImage = false);
     }
@@ -75,11 +84,30 @@ class _AddItemScreenState extends State<AddItemScreen> {
     if (picked != null) setState(() => _date = picked);
   }
 
+  /// "Next" / "Post" button.
+  void _onContinue() {
+    if (_step == 0) {
+      setState(() => _step = 1);
+    } else if (_step == 1) {
+      final ok = _detailsFormKey.currentState!.validate();
+      setState(() {
+        _detailsHasError = !ok;
+        if (ok) _step = 2;
+      });
+    } else if (_locationFormKey.currentState!.validate()) {
+      _save();
+    }
+  }
+
+  void _onBack() {
+    if (_step > 0) setState(() => _step -= 1);
+  }
+
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
     final user = context.read<AuthProvider>().user!;
     final items = context.read<ItemProvider>();
     final navigator = Navigator.of(context);
+    final detail = _placeDetailController.text.trim();
 
     setState(() => _saving = true);
     try {
@@ -89,7 +117,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
         title: _titleController.text.trim(),
         category: _category!,
         description: _descriptionController.text.trim(),
-        location: _locationController.text.trim(),
+        location: detail.isEmpty ? _place! : '$_place · $detail',
         date: _date,
         imageBase64: _imageBase64,
         ownerId: user.uid,
@@ -99,12 +127,13 @@ class _AddItemScreenState extends State<AddItemScreen> {
       ));
       final matchCount = items.matchesFor(saved).length;
       _showMessage(matchCount == 0
-          ? 'Posted!'
+          ? 'Posted! We will show matches as soon as they appear.'
           : 'Posted! $matchCount possible match${matchCount == 1 ? '' : 'es'} found.');
       // Replace the form with the new post's detail page.
       navigator.pushReplacementNamed(AppRoutes.itemDetail, arguments: saved);
     } catch (e) {
-      _showMessage('Could not save: $e');
+      _showMessage('Could not save your post. Check your internet and try again.');
+      debugPrint('Save failed: $e');
       if (mounted) setState(() => _saving = false);
     }
   }
@@ -114,134 +143,231 @@ class _AddItemScreenState extends State<AddItemScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
+  // ---- UI ----
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Post an item')),
       body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              SegmentedButton<ItemType>(
-                segments: const [
-                  ButtonSegment(value: ItemType.lost, label: Text('I lost something')),
-                  ButtonSegment(value: ItemType.found, label: Text('I found something')),
+        child: Stepper(
+          type: StepperType.horizontal,
+          currentStep: _step,
+          onStepContinue: _onContinue,
+          onStepCancel: _onBack,
+          // Tapping a step header only goes back (forward needs "Next").
+          onStepTapped: (i) {
+            if (i < _step) setState(() => _step = i);
+          },
+          controlsBuilder: (context, details) => Padding(
+            padding: const EdgeInsets.only(top: Space.l),
+            child: Row(
+              children: [
+                if (_step > 0) ...[
+                  TextButton(onPressed: details.onStepCancel, child: const Text('Back')),
+                  const SizedBox(width: Space.s),
                 ],
-                selected: {_type!},
-                onSelectionChanged: (s) => setState(() => _type = s.first),
-              ),
-              const SizedBox(height: 16),
-              _buildPhotoSection(),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _titleController,
-                textCapitalization: TextCapitalization.sentences,
-                maxLength: 60,
-                decoration: const InputDecoration(
-                    labelText: 'Title', hintText: 'e.g. Black leather wallet'),
-                validator: (v) => validateRequired(v, 'a title'),
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                initialValue: _category,
-                decoration: const InputDecoration(labelText: 'Category'),
-                items: [
-                  for (final c in itemCategories) DropdownMenuItem(value: c, child: Text(c)),
-                ],
-                onChanged: (v) => setState(() => _category = v),
-                validator: (v) => v == null ? 'Choose a category' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                textCapitalization: TextCapitalization.sentences,
-                maxLines: 3,
-                maxLength: 300,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  hintText: 'Colour, brand, stickers, what was inside…',
-                  alignLabelWithHint: true,
+                Expanded(
+                  child: PrimaryButton(
+                    label: _step == 2 ? 'Post' : 'Next',
+                    icon: _step == 2 ? Icons.check_rounded : Icons.arrow_forward_rounded,
+                    loading: _saving,
+                    onPressed: _pickingImage ? null : details.onStepContinue,
+                  ),
                 ),
-                validator: (v) => validateRequired(v, 'a description'),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _locationController,
-                decoration: const InputDecoration(
-                  labelText: 'Location',
-                  hintText: 'e.g. Library 2nd floor',
-                  prefixIcon: Icon(Icons.place_outlined),
-                ),
-                validator: (v) => validateRequired(v, 'where it was lost or found'),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.event),
-                title: Text(_type == ItemType.lost ? 'Date lost' : 'Date found'),
-                subtitle: Text(formatDate(_date)),
-                trailing: TextButton(onPressed: _pickDate, child: const Text('Change')),
-              ),
-              const SizedBox(height: 16),
-              FilledButton.icon(
-                onPressed: _saving || _pickingImage ? null : _save,
-                icon: _saving
-                    ? const SizedBox.square(
-                        dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.check),
-                label: Text(_saving ? 'Saving…' : 'Post'),
-              ),
-            ],
+              ],
+            ),
           ),
+          steps: [
+            Step(
+              title: const SizedBox.shrink(),
+              label: const Text('Photo'), // label sits under the circle: fits 320 px phones
+              isActive: _step >= 0,
+              state: _step > 0 ? StepState.complete : StepState.indexed,
+              content: _photoStep(),
+            ),
+            Step(
+              title: const SizedBox.shrink(),
+              label: const Text('Details'),
+              isActive: _step >= 1,
+              state: _detailsHasError
+                  ? StepState.error
+                  : _step > 1
+                      ? StepState.complete
+                      : StepState.indexed,
+              content: _detailsStep(),
+            ),
+            Step(
+              title: const SizedBox.shrink(),
+              label: const Text('Location'),
+              isActive: _step >= 2,
+              content: _locationStep(),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildPhotoSection() {
+  Widget _photoStep() {
+    final colors = Theme.of(context).colorScheme;
+    Widget box;
     if (_pickingImage) {
-      return const SizedBox(height: 180, child: Center(child: CircularProgressIndicator()));
-    }
-    if (_imageBase64 != null) {
-      return Stack(
+      box = const Center(child: CircularProgressIndicator());
+    } else if (_imageBase64 != null) {
+      box = Stack(
+        fit: StackFit.expand,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.memory(base64Decode(_imageBase64!),
-                height: 220, width: double.infinity, fit: BoxFit.cover),
-          ),
+          Image.memory(base64Decode(_imageBase64!), fit: BoxFit.cover),
           Positioned(
-            top: 8,
-            right: 8,
+            top: Space.s,
+            right: Space.s,
             child: IconButton.filled(
               tooltip: 'Remove photo',
-              icon: const Icon(Icons.close),
+              icon: const Icon(Icons.close_rounded),
               onPressed: () => setState(() => _imageBase64 = null),
             ),
           ),
         ],
       );
+    } else {
+      box = Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.add_a_photo_rounded, size: 48, color: colors.primary),
+          const SizedBox(height: Space.s),
+          const Text('Add a clear photo (optional)'),
+          Text('It helps people recognise the item',
+              style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12)),
+        ],
+      );
     }
-    return Row(
+
+    return Column(
       children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () => _pickImage(ImageSource.camera),
-            icon: const Icon(Icons.photo_camera),
-            label: const Text('Camera'),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(kRadius),
+          child: Container(
+            height: 220,
+            width: double.infinity,
+            color: colors.surfaceContainerHighest,
+            child: box,
           ),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () => _pickImage(ImageSource.gallery),
-            icon: const Icon(Icons.photo_library),
-            label: const Text('Gallery'),
-          ),
+        const SizedBox(height: Space.m),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _pickingImage ? null : () => _pickImage(ImageSource.camera),
+                icon: const Icon(Icons.photo_camera_rounded),
+                label: const Text('Camera'),
+              ),
+            ),
+            const SizedBox(width: Space.m),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _pickingImage ? null : () => _pickImage(ImageSource.gallery),
+                icon: const Icon(Icons.photo_library_rounded),
+                label: const Text('Gallery'),
+              ),
+            ),
+          ],
         ),
       ],
+    );
+  }
+
+  Widget _detailsStep() {
+    return Form(
+      key: _detailsFormKey,
+      child: Column(
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<ItemType>(
+              segments: const [
+                ButtonSegment(value: ItemType.lost, label: Text('I lost it')),
+                ButtonSegment(value: ItemType.found, label: Text('I found it')),
+              ],
+              selected: {_type!},
+              onSelectionChanged: (s) => setState(() => _type = s.first),
+            ),
+          ),
+          const SizedBox(height: Space.m),
+          TextFormField(
+            controller: _titleController,
+            textCapitalization: TextCapitalization.sentences,
+            maxLength: 60,
+            decoration: const InputDecoration(
+                labelText: 'Title', hintText: 'e.g. Black leather wallet'),
+            validator: (v) => validateRequired(v, 'a title'),
+          ),
+          const SizedBox(height: Space.s),
+          DropdownButtonFormField<String>(
+            initialValue: _category,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'Category'),
+            items: [
+              for (final c in itemCategories) DropdownMenuItem(value: c, child: Text(c)),
+            ],
+            onChanged: (v) => setState(() => _category = v),
+            validator: (v) => v == null ? 'Choose a category' : null,
+          ),
+          const SizedBox(height: Space.m),
+          TextFormField(
+            controller: _descriptionController,
+            textCapitalization: TextCapitalization.sentences,
+            maxLines: 3,
+            maxLength: 300,
+            decoration: const InputDecoration(
+              labelText: 'Description',
+              hintText: 'Colour, brand, stickers, what was inside…',
+              alignLabelWithHint: true,
+            ),
+            validator: (v) => validateRequired(v, 'a description'),
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.event_rounded),
+            title: Text(_type == ItemType.lost ? 'Date lost' : 'Date found'),
+            subtitle: Text(formatDate(_date)),
+            trailing: TextButton(onPressed: _pickDate, child: const Text('Change')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _locationStep() {
+    return Form(
+      key: _locationFormKey,
+      child: Column(
+        children: [
+          DropdownButtonFormField<String>(
+            initialValue: _place,
+            isExpanded: true,
+            decoration: const InputDecoration(
+              labelText: 'Where on campus?',
+              prefixIcon: Icon(Icons.place_rounded),
+            ),
+            items: [
+              for (final p in campusLocations) DropdownMenuItem(value: p, child: Text(p)),
+            ],
+            onChanged: (v) => setState(() => _place = v),
+            validator: (v) => v == null ? 'Choose a place' : null,
+          ),
+          const SizedBox(height: Space.m),
+          TextFormField(
+            controller: _placeDetailController,
+            maxLength: 60,
+            decoration: const InputDecoration(
+              labelText: 'More detail (optional)',
+              hintText: 'e.g. 2nd floor, near the window',
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
