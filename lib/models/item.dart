@@ -21,6 +21,7 @@ class Item {
   final String ownerName;
   final String ownerEmail;
   final DateTime createdAt; // when the post was made; the feed sorts by this
+  final String status; // 'open', or 'returned' once the owner has it back
 
   Item({
     required this.id,
@@ -35,6 +36,7 @@ class Item {
     required this.ownerEmail,
     required this.createdAt,
     this.imageBase64,
+    this.status = 'open',
   });
 
   /// The photo as raw bytes. `late final` means it is decoded only once,
@@ -43,6 +45,7 @@ class Item {
       imageBase64 == null ? null : base64Decode(imageBase64!);
 
   bool get isLost => type == ItemType.lost;
+  bool get isReturned => status == 'returned';
 
   /// Converts this item into a map that Firestore can store.
   Map<String, dynamic> toMap() {
@@ -58,6 +61,7 @@ class Item {
       'ownerName': ownerName,
       'ownerEmail': ownerEmail,
       'createdAt': Timestamp.fromDate(createdAt),
+      'status': status,
     };
   }
 
@@ -77,6 +81,7 @@ class Item {
       ownerName: map['ownerName'] ?? '',
       ownerEmail: map['ownerEmail'] ?? '',
       createdAt: _toDateTime(map['createdAt']),
+      status: map['status'] ?? 'open',
     );
   }
 
@@ -95,6 +100,7 @@ class Item {
       ownerName: ownerName,
       ownerEmail: ownerEmail,
       createdAt: createdAt,
+      status: status,
     );
   }
 }
