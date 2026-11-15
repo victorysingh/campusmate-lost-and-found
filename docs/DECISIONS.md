@@ -3,6 +3,10 @@
 Short log of choices made so the team can explain them in the viva.
 Newest phase at the bottom.
 
+> **D1 to D34 are about the first Flutter version** (kept in git history, tag
+> `flutter-phase1`). From D35 on, the app is native Android in Java, and those
+> decisions replace the Flutter ones wherever they disagree.
+
 ## Phase 0 (10 Nov 2026)
 
 | # | Decision | Why |
@@ -51,3 +55,38 @@ Newest phase at the bottom.
 | D32 | Location step = campus place dropdown (`campusLocations` in config) + optional detail text, saved as one string, e.g. "Library · 2nd floor". No map. | Simple, works offline, no API key. A map pin stays optional for Phase 2. |
 | D33 | Bottom bar has Home + Profile around the centred **+** button. My Posts / Alerts tabs arrive in Phase 2. | No empty placeholder tabs in Review 1. |
 | D34 | The detail screen's sticky button: on your own post it scrolls to the matches. On someone else's post it says "I found this" / "This is mine" and, for now, shows "Claiming arrives in the next update." | Phase 2 replaces the placeholder with the claim flow. |
+
+## Switch to Java (16 Nov 2026)
+
+| # | Decision | Why |
+|---|----------|-----|
+| D35 | **The app was rewritten as a native Android app in Java** (XML layouts, Material 3, AndroidX). The Flutter code was removed from the branch but stays in history (tag `flutter-phase1`). | The faculty requires Java for the MAD lab. |
+| D36 | Toolchain: JDK 17, Android SDK 35 (compile + target), minSdk 24 (Android 7.0), Gradle 8.10.2, Android Gradle Plugin 8.7.3. No Android Studio and no emulator on the dev laptop. | Disk space was tight. Everything builds from the command line with `./gradlew`. |
+| D37 | **Same Firebase plan as before:** Firebase Auth + Cloud Firestore only. No Storage, no Cloud Functions. Photos are compressed to at most 300 KB and saved as base64 text inside the post. | Works on the free Spark plan, nothing to pay or set up beyond Firestore. |
+| D38 | `Config.USE_MOCK_DATA` (in `Config.java`) picks mock or Firebase. The google-services Gradle plugin is applied only when `app/google-services.json` exists, so a fresh clone builds without any Firebase file. | Never commit Firebase config. The demo must work offline. |
+| D39 | Data goes through **repository interfaces** (`AuthRepository`, `ItemRepository`, `ClaimRepository`), each with a mock and a Firebase version. Screens never call Firebase directly. | The UI does not care where data comes from, and tests run on the mock version. |
+| D40 | Mock mode has **6 sample students** (password `demo123`) and the in-memory data is shared between logins. | You can log in as Asha, post a claim, log out, log in as the post owner and approve it, all on one phone. |
+| D41 | The four tabs are Fragments that are shown and hidden, not replaced. | Each tab keeps its scroll position and search text when you switch. |
+| D42 | Matching is unchanged (D13): opposite type, same category, at least one shared keyword. Returned posts are not matched. | Still easy to explain and test. |
+
+## Phase 2 (16 Nov 2026)
+
+| # | Decision | Why |
+|---|----------|-----|
+| D43 | **Claim flow:** a found post has a proof question set by the finder. The claimant answers it; the post owner approves or rejects. One claim per student per post (claim id = `itemId_claimantId`). | Stops strangers taking items. The fixed id makes duplicates impossible, even on the server. |
+| D44 | **Chat opens only after approval**, as a sub-collection `claims/{id}/messages`. | Students only talk once the owner is happy the claim is real. |
+| D45 | **Notifications are local** (NotificationCompat), not push. A watcher compares new data with what the phone saw last time (kept in SharedPreferences) and notifies about: a new claim on my post, my claim approved or rejected, and a new post that matches mine. If notifications are not allowed, the same message shows as a snackbar. | Push needs Cloud Functions or a server (not allowed, D37). Local notifications work while the app is open or still running in the background. |
+| D46 | **Known gap:** with the app fully closed, no notification arrives. | Needs Firebase Cloud Messaging + a server. Listed as future scope. |
+| D47 | **Offline:** Firestore keeps writes on the phone and syncs them later. If a write has not been confirmed after 8 seconds, the app treats it as saved. When posting or editing with no internet, the form says the post is saved on the phone and will sync. | Otherwise a button would spin forever with no signal. |
+| D48 | Location picker = campus place dropdown + optional detail (as D32). No map. | No API key, works offline. |
+| D49 | My Posts: edit, mark as returned (and undo), delete with a confirmation dialog. Returned posts drop out of matching and cannot be claimed. | Owners need to close a post once the item is back. |
+
+## Phase 3 (16 Nov 2026)
+
+| # | Decision | Why |
+|---|----------|-----|
+| D50 | **`firestore.rules`**: posts readable by any signed-in student; only the owner may create (as themselves), edit or delete. Claims readable only by the two participants; created only by the claimant, as pending, on someone else's open post; only the post owner may change the status (and nothing else). Chat messages: participants only, and only after approval. | The app checks all of this too, but an APK can be modified, so the server must enforce it. |
+| D51 | **Known gap:** the rules have not been run against the Firestore emulator or a real project yet (no Firebase project exists). | Firebase setup is a human step. Test them once the project exists. |
+| D52 | Tests run on the laptop with **Robolectric** (Android framework on the JVM) and Espresso, so no phone or emulator is needed: 41 tests. A small-phone test (320 × 568 dp) fails if any view is cut off. | No emulator (D36). |
+| D53 | Screenshots are drawn by a test (`ScreenshotTest`) at 390 × 844 dp. They are only rewritten when you ask: `./gradlew testDebugUnitTest -Pscreenshots`. | Same screenshots on every machine, and normal test runs do not touch the docs. |
+| D54 | The dark-mode switch is saved (SharedPreferences) and applied when the app starts. This replaces D24. | SharedPreferences is built into Android, no extra library. |
