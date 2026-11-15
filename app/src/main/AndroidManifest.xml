@@ -35,10 +35,10 @@
 
         <activity
             android:name=".ui.LoginActivity"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustResize|stateHidden" />
         <activity
             android:name=".ui.SignupActivity"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustResize|stateHidden" />
         <activity
             android:name=".ui.AddItemActivity"
             android:windowSoftInputMode="adjustResize" />
