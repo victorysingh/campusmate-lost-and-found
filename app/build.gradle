@@ -35,12 +35,14 @@ android {
                 keyPassword props['keyPassword']
             }
         }
-        buildTypes.release.signingConfig signingConfigs.release
     }
 
     buildTypes {
         release {
             minifyEnabled false
+            // Without keystore.properties the release APK is signed with the
+            // Android debug key: fine for installing on team phones, not for Play Store.
+            signingConfig keystoreFile.exists() ? signingConfigs.release : signingConfigs.debug
         }
     }
 
