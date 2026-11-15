@@ -29,6 +29,18 @@
                 android:paddingStart="@dimen/space_m"
                 android:paddingEnd="@dimen/space_m">
 
+                <!-- Your initials -->
+                <TextView
+                    android:id="@+id/home_avatar"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginEnd="12dp"
+                    android:background="@drawable/bg_avatar"
+                    android:gravity="center"
+                    android:importantForAccessibility="no"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="@color/md_on_primary_container" />
+
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -43,9 +55,13 @@
                         android:ellipsize="end"
                         android:textAppearance="?attr/textAppearanceHeadlineSmall" />
 
+                    <!-- "6 lost · 6 found · 0 returned" once posts have loaded -->
                     <TextView
+                        android:id="@+id/summary"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:maxLines="1"
+                        android:ellipsize="end"
                         android:text="@string/home_subtitle"
                         android:textAppearance="?attr/textAppearanceBodyMedium"
                         android:textColor="?attr/colorOnSurfaceVariant" />

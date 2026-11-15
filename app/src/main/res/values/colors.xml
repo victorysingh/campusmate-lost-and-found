@@ -49,4 +49,10 @@
     <color name="demo_banner_text">#3D3000</color>
     <color name="skeleton">#DDE4E3</color>
     <color name="bubble_theirs">#E3E9E9</color>
+
+    <!-- Teal band on the login screen -->
+    <color name="hero_start">#00696B</color>
+    <color name="hero_end">#0A4547</color>
+    <color name="on_hero">#FFFFFF</color>
+    <color name="on_hero_variant">#CDEFEF</color>
 </resources>

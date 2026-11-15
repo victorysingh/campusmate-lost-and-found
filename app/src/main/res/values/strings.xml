@@ -179,6 +179,8 @@
     <string name="data_demo">Demo mode (in memory, no internet)</string>
     <string name="data_firebase">Firebase (Auth + Cloud Firestore)</string>
     <string name="log_out">Log out</string>
+    <string name="you">You</string>
+    <string name="home_summary">%1$d lost · %2$d found · %3$d returned</string>
     <string name="stats">%1$d posts · %2$d returned · %3$d claims</string>
     <string name="app_version">Campusmate %1$s · MAD mini project</string>
 

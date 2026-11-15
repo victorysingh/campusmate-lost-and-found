@@ -51,6 +51,7 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle saved) {
         AppUser user = Repositories.auth().currentUser();
         b.greeting.setText(getString(R.string.greeting, user == null ? "there" : user.firstName()));
+        b.homeAvatar.setText(user == null ? "?" : user.initials());
         b.logo.setOnLongClickListener(v -> {
             DemoMenu.show(requireActivity());
             return true;
@@ -136,6 +137,8 @@ public class HomeFragment extends Fragment {
             return;
         }
 
+        showSummary();
+
         int lost = 0;
         int found = 0;
         List<Item> shown = new ArrayList<>();
@@ -168,6 +171,25 @@ public class HomeFragment extends Fragment {
                     getString(Item.LOST.equals(type) ? R.string.empty_lost_title : R.string.empty_found_title),
                     getString(R.string.empty_feed_message), getString(R.string.post_an_item),
                     v -> startActivity(AddItemActivity.newIntent(requireContext(), null)));
+        }
+    }
+
+    /** Header line: how many posts are open on campus, and how many went home. */
+    private void showSummary() {
+        int lost = 0;
+        int found = 0;
+        int returned = 0;
+        for (Item item : state.items) {
+            if (item.isReturned()) returned++;
+            else if (item.isLost()) lost++;
+            else found++;
+        }
+        if (lost + found + returned == 0) {
+            b.summary.setText(R.string.home_subtitle);
+            b.summary.setTextColor(MaterialColors.getColor(b.summary, com.google.android.material.R.attr.colorOnSurfaceVariant));
+        } else {
+            b.summary.setText(getString(R.string.home_summary, lost, found, returned));
+            b.summary.setTextColor(MaterialColors.getColor(b.summary, androidx.appcompat.R.attr.colorPrimary));
         }
     }
 

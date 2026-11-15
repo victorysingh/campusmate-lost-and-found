@@ -3,8 +3,6 @@ package com.campusmate.ui;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.drawable.GradientDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
 import android.view.View;
@@ -54,28 +52,38 @@ public final class Ui {
         }
     }
 
-    /** Two colours per category for the placeholder gradient when a post has no photo. */
-    private static int[] categoryGradient(String category) {
+    /** One colour per category, used for the picture of posts without a photo. */
+    public static int categoryColor(String category) {
         switch (category) {
             case "Electronics":
-                return new int[]{0xFF3B5BDB, 0xFF15AABF};
+                return 0xFF3B5BDB;
             case "ID Card":
-                return new int[]{0xFFE8590C, 0xFFF59F00};
+                return 0xFFE8590C;
             case "Wallet":
-                return new int[]{0xFF5F3DC4, 0xFF9C36B5};
+                return 0xFF7048E8;
             case "Keys":
-                return new int[]{0xFFC2255C, 0xFFF06595};
+                return 0xFFD6336C;
             case "Books & Notes":
-                return new int[]{0xFF2B8A3E, 0xFF74B816};
+                return 0xFF2F9E44;
             case "Bags":
-                return new int[]{0xFF862E9C, 0xFFDA77F2};
+                return 0xFFAE3EC9;
             case "Clothing":
-                return new int[]{0xFF495057, 0xFF868E96};
+                return 0xFF5C6B73;
             case "Water Bottle":
-                return new int[]{0xFF1971C2, 0xFF4DABF7};
+                return 0xFF1C7ED6;
             default:
-                return new int[]{0xFF0A5E60, 0xFF14A3A5};
+                return 0xFF0C8599;
         }
+    }
+
+    /** "Priya Sharma" -> "PS", for the small round avatars. */
+    public static String initials(String name) {
+        String[] parts = (name == null ? "" : name.trim()).split("\\s+");
+        StringBuilder sb = new StringBuilder();
+        for (String part : parts) {
+            if (!part.isEmpty() && sb.length() < 2) sb.append(Character.toUpperCase(part.charAt(0)));
+        }
+        return sb.length() == 0 ? "?" : sb.toString();
     }
 
     /** Shows the photo, or a coloured gradient with the category icon. */
@@ -87,12 +95,10 @@ public final class Ui {
             view.setScaleType(ImageView.ScaleType.CENTER_CROP);
             view.setImageBitmap(bitmap);
         } else {
-            GradientDrawable gradient = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                    categoryGradient(item.category));
-            view.setBackground(gradient);
-            view.setScaleType(ImageView.ScaleType.CENTER);
-            view.setImageResource(categoryIcon(item.category));
-            ImageViewCompat.setImageTintList(view, ColorStateList.valueOf(Color.argb(230, 255, 255, 255)));
+            view.setBackground(null);
+            ImageViewCompat.setImageTintList(view, null);
+            view.setScaleType(ImageView.ScaleType.FIT_XY);
+            view.setImageDrawable(new PlaceholderDrawable(view.getContext(), item.category));
         }
     }
 
