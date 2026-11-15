@@ -17,6 +17,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:id="@+id/header"
             android:orientation="vertical"
             android:paddingTop="@dimen/space_m"
             app:layout_scrollFlags="scroll|enterAlways|snap">

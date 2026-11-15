@@ -1,11 +1,13 @@
 package com.campusmate.ui;
 
+import android.animation.ValueAnimator;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -24,6 +26,7 @@ import com.google.android.material.chip.Chip;
 import com.google.android.material.color.MaterialColors;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -39,6 +42,8 @@ public class HomeFragment extends Fragment {
     private String type = Item.LOST;
     private String category;      // null = all categories
     private String query = "";
+    private int[] shownCounts;       // numbers currently in the header line
+    private ValueAnimator countUp;
     private boolean firstListShown;
 
     @Override
@@ -52,6 +57,7 @@ public class HomeFragment extends Fragment {
         AppUser user = Repositories.auth().currentUser();
         b.greeting.setText(getString(R.string.greeting, user == null ? "there" : user.firstName()));
         b.homeAvatar.setText(user == null ? "?" : user.initials());
+        if (saved == null) Motion.fadeUp(b.header, 60);
         b.logo.setOnLongClickListener(v -> {
             DemoMenu.show(requireActivity());
             return true;
@@ -65,6 +71,7 @@ public class HomeFragment extends Fragment {
         b.categoryChips.setOnCheckedStateChangeListener((group, ids) -> {
             category = ids.isEmpty() ? null : (String) group.findViewById(ids.get(0)).getTag();
             render();
+            replayCards();
         });
 
         b.typeToggle.check(R.id.lost_button);
@@ -73,6 +80,7 @@ public class HomeFragment extends Fragment {
             type = id == R.id.lost_button ? Item.LOST : Item.FOUND;
             render();
             b.list.scrollToPosition(0);
+            replayCards();
         });
 
         b.search.addTextChangedListener(new TextWatcher() {
@@ -185,12 +193,35 @@ public class HomeFragment extends Fragment {
             else found++;
         }
         if (lost + found + returned == 0) {
+            if (countUp != null) countUp.cancel();
+            shownCounts = null;
             b.summary.setText(R.string.home_subtitle);
             b.summary.setTextColor(MaterialColors.getColor(b.summary, com.google.android.material.R.attr.colorOnSurfaceVariant));
-        } else {
-            b.summary.setText(getString(R.string.home_summary, lost, found, returned));
-            b.summary.setTextColor(MaterialColors.getColor(b.summary, androidx.appcompat.R.attr.colorPrimary));
+            return;
         }
+        b.summary.setTextColor(MaterialColors.getColor(b.summary, androidx.appcompat.R.attr.colorPrimary));
+        int[] target = {lost, found, returned};
+        if (Arrays.equals(target, shownCounts)) return;
+        // The numbers count up from what was shown before (0 the first time).
+        int[] from = shownCounts == null ? new int[3] : shownCounts;
+        shownCounts = target;
+        if (countUp != null) countUp.cancel();
+        TextView summary = b.summary;
+        countUp = ValueAnimator.ofFloat(0f, 1f);
+        countUp.setDuration(600);
+        countUp.addUpdateListener(a -> {
+            float f = a.getAnimatedFraction();
+            summary.setText(summary.getContext().getString(R.string.home_summary,
+                    Math.round(from[0] + (target[0] - from[0]) * f),
+                    Math.round(from[1] + (target[1] - from[1]) * f),
+                    Math.round(from[2] + (target[2] - from[2]) * f)));
+        });
+        countUp.start();
+    }
+
+    /** Cards slide in again after switching Lost / Found or a category. */
+    private void replayCards() {
+        if (b != null && b.list.getVisibility() == View.VISIBLE) b.list.scheduleLayoutAnimation();
     }
 
     private boolean matchesFilters(Item item) {

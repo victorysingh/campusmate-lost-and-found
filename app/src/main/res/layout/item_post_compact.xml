@@ -8,6 +8,7 @@
     android:layout_marginTop="@dimen/space_xs"
     android:layout_marginEnd="@dimen/space_m"
     android:layout_marginBottom="@dimen/space_xs"
+    android:stateListAnimator="@animator/press_scale"
     android:clickable="true"
     android:focusable="true">
 

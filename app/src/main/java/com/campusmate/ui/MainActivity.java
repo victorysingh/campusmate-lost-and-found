@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
         setUpTabs(savedInstanceState == null);
         b.fab.setOnClickListener(v -> startActivity(AddItemActivity.newIntent(this, null)));
+        if (savedInstanceState == null) Motion.popIn(b.fab, 250);
 
         notificationPermission = registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
         });

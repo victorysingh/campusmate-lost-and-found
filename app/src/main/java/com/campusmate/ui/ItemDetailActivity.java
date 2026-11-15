@@ -85,6 +85,10 @@ public class ItemDetailActivity extends AppCompatActivity {
             return;
         }
         b.image.setTransitionName("item_image_" + itemId);
+        if (savedInstanceState == null) {
+            Motion.fadeUp(b.content, 120);
+            Motion.slideUp(b.actionButton, 220);
+        }
         b.backButton.setOnClickListener(v -> supportFinishAfterTransition());
 
         matchesAdapter = new ItemAdapter(true, (match, image) -> ItemDetailActivity.open(this, match, image));

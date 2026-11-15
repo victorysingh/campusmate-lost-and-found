@@ -26,6 +26,10 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         b = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(b.getRoot());
+        if (savedInstanceState == null) {
+            Motion.popIn(b.logoRing, 80);   // logo bounces in
+            Motion.slideUp(b.sheet, 160);  // then the form rises
+        }
         Ui.showDemoBanner(b.demoBanner.getRoot());
 
         if (Repositories.isDemoMode()) {
