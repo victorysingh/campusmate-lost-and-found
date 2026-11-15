@@ -359,7 +359,7 @@ public class AddItemActivity extends AppCompatActivity {
                 item.id = newId;
                 int matches = MatchService.findMatches(item, currentItems()).size();
                 String message = offline ? getString(R.string.saved_offline)
-                        : matches > 0 ? getString(R.string.posted_with_matches, matches)
+                        : matches > 0 ? getResources().getQuantityString(R.plurals.posted_with_matches, matches, matches)
                         : getString(R.string.posted_no_matches);
                 finishWithMessage(newId, message);
             }

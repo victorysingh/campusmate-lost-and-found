@@ -61,7 +61,10 @@
     <string name="proof_note">The finder asks a proof question before handing it over.</string>
     <string name="action_this_is_mine">This is mine</string>
     <string name="action_i_found_this">I found this</string>
-    <string name="action_view_matches">View %1$d possible match(es)</string>
+    <plurals name="action_view_matches">
+        <item quantity="one">View %1$d possible match</item>
+        <item quantity="other">View %1$d possible matches</item>
+    </plurals>
     <string name="action_edit_post">Edit post</string>
     <string name="action_claim_pending">Claim sent · waiting for reply</string>
     <string name="action_claim_rejected">Claim not approved</string>
@@ -108,7 +111,10 @@
     <string name="save_changes">Save changes</string>
     <string name="choose_category">Choose a category</string>
     <string name="choose_place">Choose a place</string>
-    <string name="posted_with_matches">Posted. %1$d possible match(es) found!</string>
+    <plurals name="posted_with_matches">
+        <item quantity="one">Posted. %1$d possible match found!</item>
+        <item quantity="other">Posted. %1$d possible matches found!</item>
+    </plurals>
     <string name="posted_no_matches">Posted. We will notify you if a match appears.</string>
     <string name="saved_changes">Changes saved</string>
     <string name="saved_offline">You are offline. Saved on this phone; it uploads when you are back online.</string>

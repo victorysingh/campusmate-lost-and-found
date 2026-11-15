@@ -173,7 +173,7 @@ public class ItemDetailActivity extends AppCompatActivity {
         button.setEnabled(true);
         if (mine) {
             if (matchCount > 0) {
-                button.setText(getString(R.string.action_view_matches, matchCount));
+                button.setText(getResources().getQuantityString(R.plurals.action_view_matches, matchCount, matchCount));
                 button.setOnClickListener(v -> scrollToMatches());
             } else {
                 button.setText(R.string.action_edit_post);
