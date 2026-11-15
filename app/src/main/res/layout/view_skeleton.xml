@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Grey placeholder cards shown while posts load. SkeletonView makes them pulse. -->
+<com.campusmate.ui.SkeletonView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingTop="@dimen/space_s"
+    android:visibility="gone">
+
+    <include layout="@layout/view_skeleton_card" />
+
+    <include layout="@layout/view_skeleton_card" />
+
+    <include layout="@layout/view_skeleton_card" />
+</com.campusmate.ui.SkeletonView>

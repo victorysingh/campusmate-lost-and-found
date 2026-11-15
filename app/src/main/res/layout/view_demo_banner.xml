@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Yellow strip shown on the main screens in mock mode -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/demo_banner"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/demo_banner"
+    android:gravity="center"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp"
+    android:text="@string/demo_mode_banner"
+    android:textAppearance="?attr/textAppearanceLabelMedium"
+    android:textColor="@color/demo_banner_text"
+    android:visibility="gone" />

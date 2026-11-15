@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@drawable/ic_home"
+        android:title="@string/nav_home" />
+    <item
+        android:id="@+id/nav_my_posts"
+        android:icon="@drawable/ic_list"
+        android:title="@string/nav_my_posts" />
+    <!-- Empty slot under the centred "+" button -->
+    <item
+        android:id="@+id/nav_placeholder"
+        android:enabled="false"
+        android:title="" />
+    <item
+        android:id="@+id/nav_claims"
+        android:icon="@drawable/ic_inbox"
+        android:title="@string/nav_claims" />
+    <item
+        android:id="@+id/nav_profile"
+        android:icon="@drawable/ic_person"
+        android:title="@string/nav_profile" />
+</menu>
