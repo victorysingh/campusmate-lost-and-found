@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 15 draws apps edge to edge by default. We keep classic system bars
+         so no screen content hides behind the status bar (see docs/DECISIONS.md). -->
+    <style name="Theme.Campusmate" parent="Base.Theme.Campusmate">
+        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+    </style>
+</resources>

@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Campusmate</string>
+    <string name="tagline">Lost it? Found it? Campusmate it.</string>
+    <string name="demo_mode_banner">DEMO MODE · data lives in memory only</string>
+    <string name="logo_description">Campusmate logo</string>
+
+    <!-- Login / sign up -->
+    <string name="login_title">Welcome back</string>
+    <string name="login_subtitle">Log in with your college email</string>
+    <string name="email_hint">College email</string>
+    <string name="password_hint">Password</string>
+    <string name="password_new_hint">Password (min 6 characters)</string>
+    <string name="confirm_password_hint">Confirm password</string>
+    <string name="name_hint">Full name</string>
+    <string name="log_in">Log in</string>
+    <string name="sign_up">Sign up</string>
+    <string name="go_to_signup">New here? Create an account</string>
+    <string name="go_to_login">Already have an account? Log in</string>
+    <string name="signup_title">Create your account</string>
+    <string name="signup_subtitle">Only college email addresses can join</string>
+    <string name="demo_accounts_hint">Demo accounts: priya.sharma@%1$s, rahul.kumar@%1$s … password %2$s</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_my_posts">My posts</string>
+    <string name="nav_claims">Claims</string>
+    <string name="nav_profile">Profile</string>
+    <string name="post_an_item">Post an item</string>
+
+    <!-- Home -->
+    <string name="greeting">Hi, %1$s</string>
+    <string name="home_subtitle">What are you looking for today?</string>
+    <string name="search_hint">Search AirPods, ID card, library…</string>
+    <string name="lost_count">Lost (%1$d)</string>
+    <string name="found_count">Found (%1$d)</string>
+    <string name="empty_lost_title">No lost items yet</string>
+    <string name="empty_found_title">No found items yet</string>
+    <string name="empty_feed_message">When someone posts, it shows up here. Tap + to post one.</string>
+    <string name="empty_search_title">Nothing matches</string>
+    <string name="empty_search_message">Try another word or clear the filters.</string>
+    <string name="clear_filters">Clear filters</string>
+    <string name="error_title">Could not load posts</string>
+    <string name="try_again">Try again</string>
+    <string name="offline_banner">You are offline. Changes will sync when you are back online.</string>
+
+    <string name="badge_lost">LOST</string>
+    <string name="badge_found">FOUND</string>
+    <string name="badge_returned">RETURNED</string>
+
+    <!-- Item detail -->
+    <string name="detail_category">Category</string>
+    <string name="detail_location">Location</string>
+    <string name="detail_date_lost">Date lost</string>
+    <string name="detail_date_found">Date found</string>
+    <string name="detail_posted_by">Posted by</string>
+    <string name="detail_description">Description</string>
+    <string name="possible_matches">Possible matches (%1$d)</string>
+    <string name="no_matches">No possible matches yet. We will notify you when one is posted.</string>
+    <string name="matched_on">Matched on: %1$s</string>
+    <string name="proof_note">The finder asks a proof question before handing it over.</string>
+    <string name="action_this_is_mine">This is mine</string>
+    <string name="action_i_found_this">I found this</string>
+    <string name="action_view_matches">View %1$d possible match(es)</string>
+    <string name="action_edit_post">Edit post</string>
+    <string name="action_claim_pending">Claim sent · waiting for reply</string>
+    <string name="action_claim_rejected">Claim not approved</string>
+    <string name="action_open_chat">Open chat</string>
+    <string name="action_already_returned">Already returned to its owner</string>
+    <string name="your_claim">Your claim</string>
+    <string name="back">Back</string>
+
+    <!-- Claim dialog -->
+    <string name="claim_found_title">Is this yours?</string>
+    <string name="claim_lost_title">Did you find it?</string>
+    <string name="claim_lost_question">Where and when did you find it? Add one detail that shows it is the same item.</string>
+    <string name="claim_answer_hint">Your answer</string>
+    <string name="claim_send">Send claim</string>
+    <string name="claim_sent">Claim sent. You will get a notification when %1$s replies.</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Post form -->
+    <string name="post_title">Post an item</string>
+    <string name="edit_title">Edit post</string>
+    <string name="step_photo">Photo</string>
+    <string name="step_details">Details</string>
+    <string name="step_location">Location</string>
+    <string name="photo_heading">Add a photo</string>
+    <string name="photo_hint">Optional, but posts with photos are easier to recognise. Photos are compressed below 300 KB.</string>
+    <string name="camera">Camera</string>
+    <string name="gallery">Gallery</string>
+    <string name="remove_photo">Remove photo</string>
+    <string name="type_lost">I lost it</string>
+    <string name="type_found">I found it</string>
+    <string name="title_hint">Title</string>
+    <string name="category_hint">Category</string>
+    <string name="description_hint">Description</string>
+    <string name="description_helper">Colour, brand, stickers, anything that helps</string>
+    <string name="date_lost_hint">Date lost</string>
+    <string name="date_found_hint">Date found</string>
+    <string name="proof_question_hint">Proof question for the owner</string>
+    <string name="proof_question_helper">Only the real owner should know the answer. Example: What sticker is inside the case?</string>
+    <string name="where_on_campus">Where on campus?</string>
+    <string name="more_detail_hint">More detail (optional)</string>
+    <string name="more_detail_helper">Example: 2nd floor, near the window</string>
+    <string name="next">Next</string>
+    <string name="post">Post</string>
+    <string name="save_changes">Save changes</string>
+    <string name="choose_category">Choose a category</string>
+    <string name="choose_place">Choose a place</string>
+    <string name="posted_with_matches">Posted. %1$d possible match(es) found!</string>
+    <string name="posted_no_matches">Posted. We will notify you if a match appears.</string>
+    <string name="saved_changes">Changes saved</string>
+    <string name="saved_offline">You are offline. Saved on this phone; it uploads when you are back online.</string>
+    <string name="photo_failed">Could not read that photo. Try another one.</string>
+    <string name="no_camera_app">No camera app found on this phone.</string>
+    <string name="compressing">Compressing photo…</string>
+
+    <!-- My posts -->
+    <string name="my_posts_title">My posts</string>
+    <string name="my_posts_subtitle">Edit, mark as returned or delete what you posted</string>
+    <string name="my_posts_empty_title">You have not posted anything</string>
+    <string name="my_posts_empty_message">Lost something or found something? Post it so others can help.</string>
+    <string name="mark_returned">Mark as returned</string>
+    <string name="reopen">Mark as not returned</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="delete_title">Delete this post?</string>
+    <string name="delete_message">\"%1$s\" will be removed for everyone. This cannot be undone.</string>
+    <string name="deleted">Post deleted</string>
+    <string name="marked_returned">Marked as returned. Nice work!</string>
+    <string name="marked_open">Marked as not returned</string>
+    <plurals name="claims_on_post">
+        <item quantity="one">%1$d claim waiting</item>
+        <item quantity="other">%1$d claims waiting</item>
+    </plurals>
+
+    <!-- Claims -->
+    <string name="claims_title">Claims</string>
+    <string name="claims_subtitle">Approve the real owner, then chat to hand it over</string>
+    <string name="tab_requests">On my posts</string>
+    <string name="tab_my_claims">Sent by me</string>
+    <string name="claims_empty_requests_title">No claims on your posts</string>
+    <string name="claims_empty_requests_message">When someone says \"this is mine\" or \"I found this\", it appears here.</string>
+    <string name="claims_empty_mine_title">You have not claimed anything</string>
+    <string name="claims_empty_mine_message">Open a post on Home and tap \"This is mine\" or \"I found this\".</string>
+    <string name="claim_from">From %1$s</string>
+    <string name="claim_to">To %1$s</string>
+    <string name="question_label">Q: %1$s</string>
+    <string name="answer_label">A: %1$s</string>
+    <string name="approve">Approve</string>
+    <string name="reject">Reject</string>
+    <string name="approved_message">Approved. Chat is open now.</string>
+    <string name="rejected_message">Claim rejected</string>
+    <string name="status_pending">Pending</string>
+    <string name="status_approved">Approved</string>
+    <string name="status_rejected">Rejected</string>
+
+    <!-- Chat -->
+    <string name="chat_hint">Type a message</string>
+    <string name="send">Send</string>
+    <string name="chat_empty">Say hi and agree on a place on campus to hand it over.</string>
+    <string name="chat_locked">Chat opens after the post owner approves the claim.</string>
+    <string name="chat_with">Chat with %1$s</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Profile</string>
+    <string name="dark_mode">Dark mode</string>
+    <string name="notifications">Notifications</string>
+    <string name="notifications_on">On: claims, approvals and matches</string>
+    <string name="notifications_off">Off: tap to allow</string>
+    <string name="data_source">Data source</string>
+    <string name="data_demo">Demo mode (in memory, no internet)</string>
+    <string name="data_firebase">Firebase (Auth + Cloud Firestore)</string>
+    <string name="log_out">Log out</string>
+    <string name="stats">%1$d posts · %2$d returned · %3$d claims</string>
+    <string name="app_version">Campusmate %1$s · MAD mini project</string>
+
+    <!-- Demo menu -->
+    <string name="demo_menu_title">Demo menu</string>
+    <string name="demo_load_samples">Load sample data</string>
+    <string name="demo_load_samples_sub">12 posts around campus, 5 of them match</string>
+    <string name="demo_reset">Reset data</string>
+    <string name="demo_reset_sub">Remove all posts, claims and chats (demo mode only)</string>
+    <string name="demo_toggle_theme">Toggle theme</string>
+    <string name="demo_toggle_theme_sub">Switch between light and dark</string>
+    <string name="demo_simulate_match">Simulate match notification</string>
+    <string name="demo_simulate_match_sub">A sample student posts something that matches</string>
+    <string name="samples_loaded">%1$d sample posts added</string>
+    <string name="data_reset">All demo data removed</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">Claims and matches</string>
+    <string name="notification_channel_description">New claims on your posts, claim decisions and possible matches</string>
+    <string name="view">View</string>
+    <string name="dismiss">Dismiss</string>
+</resources>
