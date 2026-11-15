@@ -1,0 +1,93 @@
+rules_version = '2';
+
+// Campusmate Firestore security rules.
+// The app checks these things too, but the app can be changed by anyone with
+// the APK, so the real protection has to live here on the server.
+//
+// Deploy: firebase deploy --only firestore:rules   (or paste into
+// Firebase console > Firestore Database > Rules > Publish)
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function me() {
+      return request.auth.uid;
+    }
+
+    // ---- items/{itemId}: lost and found posts ---------------------------------
+    // Every signed-in student can read posts. Only the owner can change them.
+
+    function validItem(data) {
+      return data.type in ['lost', 'found']
+          && data.status in ['open', 'returned']
+          && data.title is string && data.title.size() >= 3 && data.title.size() <= 60
+          && data.description is string && data.description.size() <= 500
+          && data.ownerId == me()
+          // Photos are compressed below 300 KB, which is about 400 000 base64 characters.
+          // No photo is saved as null.
+          && (data.imageBase64 == null
+              || (data.imageBase64 is string && data.imageBase64.size() <= 420000));
+    }
+
+    match /items/{itemId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && validItem(request.resource.data)
+                    && request.resource.data.status == 'open';
+      // Edit, mark as returned: only the owner, and the owner cannot be changed.
+      allow update: if signedIn() && resource.data.ownerId == me()
+                    && validItem(request.resource.data);
+      allow delete: if signedIn() && resource.data.ownerId == me();
+    }
+
+    // ---- claims/{claimId}: "this is mine" / "I found this" requests ------------
+    // claimId is itemId + '_' + claimantId, so one student can claim a post once.
+
+    match /claims/{claimId} {
+      // Only the two people in the claim can see it.
+      allow read: if signedIn() && me() in resource.data.participants;
+
+      // The claimant creates it, as pending, on someone else's open post.
+      allow create: if signedIn()
+          && claimId == request.resource.data.itemId + '_' + me()
+          && request.resource.data.claimantId == me()
+          && request.resource.data.status == 'pending'
+          && request.resource.data.ownerId == itemOf(request.resource.data.itemId).ownerId
+          && request.resource.data.ownerId != me()
+          && itemOf(request.resource.data.itemId).status == 'open'
+          && request.resource.data.participants == [request.resource.data.ownerId, me()]
+          && request.resource.data.answer is string
+          && request.resource.data.answer.size() >= 2 && request.resource.data.answer.size() <= 300;
+
+      // Only the post owner decides (approve / reject), and may change nothing else.
+      allow update: if signedIn() && resource.data.ownerId == me()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+          && request.resource.data.status in ['pending', 'approved', 'rejected'];
+
+      allow delete: if false;
+
+      // ---- claims/{claimId}/messages: chat after approval ----------------------
+      match /messages/{messageId} {
+        allow read: if signedIn() && me() in claimOf(claimId).participants;
+        allow create: if signedIn()
+            && me() in claimOf(claimId).participants
+            && claimOf(claimId).status == 'approved'
+            && request.resource.data.senderId == me()
+            && request.resource.data.text is string
+            && request.resource.data.text.size() >= 1 && request.resource.data.text.size() <= 1000;
+        allow update, delete: if false;
+      }
+    }
+
+    function itemOf(itemId) {
+      return get(/databases/$(database)/documents/items/$(itemId)).data;
+    }
+
+    function claimOf(claimId) {
+      return get(/databases/$(database)/documents/claims/$(claimId)).data;
+    }
+  }
+}
